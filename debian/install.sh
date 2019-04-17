@@ -45,13 +45,14 @@ resources/php.sh
 resources/nginx.sh
 
 #Fail2ban
-resources/fail2ban.sh
+#resources/fail2ban.sh
+
+#Postgres
+resources/postgresql.sh
 
 #FreeSWITCH
 resources/switch.sh
 
-#Postgres
-resources/postgresql.sh
 
 #set the ip address
 server_address=$(hostname -I)

@@ -9,49 +9,56 @@ cd "$(dirname "$0")"
 . ./environment.sh
 
 #send a message
-echo "Install PostgreSQL"
+echo "Check Postgres Installation\n"
 
 #generate a random password
 password=$(dd if=/dev/urandom bs=1 count=20 2>/dev/null | base64)
 
-#install message
-echo "Install PostgreSQL and create the database and users\n"
+if [ ./is_installed.sh postgresql ] || [ ./is_installed.sh postgresql-bdr-9.4 ]; then
 
-#included in the distribution
-if [ ."$database_repo" = ."system" ]; then
-	apt-get install -y sudo postgresql
-fi
+	echo "Postgres Installation detected\n"
+else
 
-#postgres official repository
-if [ ."$database_repo" = ."official" ]; then
-	echo "deb http://apt.postgresql.org/pub/repos/apt/ $os_codename-pgdg main" > /etc/apt/sources.list.d/postgresql.list
-	wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-	apt-get update && apt-get upgrade -y
-	if [ ."$database_version" = ."latest" ]; then
-                apt-get install -y sudo postgresql
+	#install message
+	echo "Install PostgreSQL and create the database and users\n"
+
+	#included in the distribution
+	if [ ."$database_repo" = ."system" ]; then
+		apt-get install -y sudo postgresql
 	fi
-	if [ ."$database_version" = ."9.6" ]; then
-                apt-get install -y sudo postgresql-$database_version
-        fi
-	if [ ."$database_version" = ."9.4" ]; then
-                apt-get install -y sudo postgresql-$database_version
-        fi
+
+	#postgres official repository
+	if [ ."$database_repo" = ."official" ]; then
+		echo "deb http://apt.postgresql.org/pub/repos/apt/ $os_codename-pgdg main" > /etc/apt/sources.list.d/postgresql.list
+		wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+		apt-get update && apt-get upgrade -y
+		if [ ."$database_version" = ."latest" ]; then
+			apt-get install -y sudo postgresql
+		fi
+		if [ ."$database_version" = ."9.6" ]; then
+			apt-get install -y sudo postgresql-$database_version
+		fi
+		if [ ."$database_version" = ."9.4" ]; then
+			apt-get install -y sudo postgresql-$database_version
+		fi
+	fi
+
+	#add PostgreSQL and 2ndquadrant repos
+	if [ ."$database_repo" = ."2ndquadrant" ]; then
+		echo "deb http://apt.postgresql.org/pub/repos/apt/ $os_codename-pgdg main" > /etc/apt/sources.list.d/postgresql.list
+		echo "deb [trusted=yes] http://packages.2ndquadrant.com/bdr/apt/ $os_codename-2ndquadrant main" > /etc/apt/sources.list.d/2ndquadrant.list
+		/usr/bin/wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | apt-key add -
+		#/usr/bin/wget --quiet -O - http://packages.2ndquadrant.com/bdr/apt/AA7A6805.asc | apt-key add -
+		apt-get update && apt-get upgrade -y
+		apt-get install -y sudo postgresql-bdr-9.4 postgresql-bdr-9.4-bdr-plugin postgresql-bdr-contrib-9.4
+	fi
+
+
+	#systemd
+	systemctl daemon-reload
+	systemctl restart postgresql
+
 fi
-
-#add PostgreSQL and 2ndquadrant repos
-if [ ."$database_repo" = ."2ndquadrant" ]; then
-	echo "deb http://apt.postgresql.org/pub/repos/apt/ $os_codename-pgdg main" > /etc/apt/sources.list.d/postgresql.list
-	echo "deb [trusted=yes] http://packages.2ndquadrant.com/bdr/apt/ $os_codename-2ndquadrant main" > /etc/apt/sources.list.d/2ndquadrant.list
-	/usr/bin/wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | apt-key add -
-	#/usr/bin/wget --quiet -O - http://packages.2ndquadrant.com/bdr/apt/AA7A6805.asc | apt-key add -
-	apt-get update && apt-get upgrade -y
-	apt-get install -y sudo postgresql-bdr-9.4 postgresql-bdr-9.4-bdr-plugin postgresql-bdr-contrib-9.4
-fi
-
-
-#systemd
-systemctl daemon-reload
-systemctl restart postgresql
 
 #init.d
 #/usr/sbin/service postgresql restart
