@@ -14,7 +14,9 @@ echo "Check Postgres Installation\n"
 #generate a random password
 password=$(dd if=/dev/urandom bs=1 count=20 2>/dev/null | base64)
 
-if [ ./is_installed.sh postgresql ] || [ ./is_installed.sh postgresql-bdr-9.4 ]; then
+postgresql_installed=$(./is_installed.sh postgresql)
+postgresql_bdr_installed=$(./is_installed.sh postgresql-bdr-9.4)
+if [ "$postgresql_installed" = "0" ] || [ "$postgresql_bdr_installed" = "0" ]; then
 
 	echo "Postgres Installation detected\n"
 else
